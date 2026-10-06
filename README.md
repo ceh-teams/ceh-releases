@@ -1,10 +1,83 @@
-# CEH Manager — descargas
+<h1 align="center">CEH Manager</h1>
 
-Acá se publican los **instaladores y las actualizaciones** de CEH Manager, el sistema de gestión para comités de enlace con hospitales (médicos, instituciones, casos, agenda y asistente de IA).
+<p align="center">
+  <strong>El sistema del Comité de Enlace con los Hospitales para llevar todo en un solo lugar.</strong><br>
+  Médicos e instituciones, casos, reuniones, guardias, agenda, informes, actas y chat del comité.
+</p>
 
-Este repositorio **solo tiene las descargas**. El código fuente es privado, pero **podés pedir acceso** para verlo y reportar errores (ver [Código fuente y reporte de errores](#código-fuente-y-reporte-de-errores)).
+<p align="center">
+  <a href="https://github.com/ceh-teams/ceh-releases/releases/latest"><strong>⬇️ Descargar la última versión</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#cómo-empezar">Cómo empezar</a>
+  &nbsp;·&nbsp;
+  <a href="#código-fuente-y-reporte-de-errores">Código fuente y errores</a>
+</p>
 
-> **¿Primera vez?** Bajá la versión más reciente desde **[Releases](https://github.com/ceh-teams/ceh-releases/releases/latest)**, instalala con los pasos de abajo y, al terminar el asistente, **guardá el kit de recuperación en papel**. Sin la frase maestra ni el código de recuperación, los datos no se pueden recuperar.
+<p align="center">
+  <img src="img/medicos.png" alt="Listado de médicos con filtros y búsqueda" width="860">
+</p>
+
+<p align="center"><sub>Las capturas son del modo demo, con datos inventados.</sub></p>
+
+## Para qué sirve
+
+- 🩺 **Médicos e instituciones ordenados**: fichas, tabla y mapa, con filtros por especialidad, consultores y urgencias. Avisa cuándo hace falta volver a comunicarse con alguien («al día», «por vencer», «vencido»).
+- 📋 **Seguimiento de cada caso**: paciente, médico e institución, notas, tareas, laboratorios y personas asignadas. Las solicitudes pueden llegar solas desde un formulario en internet.
+- 📅 **Organización del comité**: reuniones con confirmación de asistencia, guardias, ausencias y un calendario compartido.
+- 📊 **Informes y presentaciones**: informes mensuales con cobertura por miembro, estadísticas y los formularios oficiales en PDF (HLC-7, HLC-29, HLC-31, HLC-33, CEH-3), generados en tu propio equipo.
+- 🗂️ **Actas, correspondencia y bienes**, con avisos de vencimiento.
+- 💬 **Chat y tableros de tareas** tipo Kanban, con avisos en el sistema y en el celular.
+- 📥 **Carga de listas** de médicos e instituciones desde Excel o CSV, con vista previa y sin duplicar.
+- ✨ **Asistente de inteligencia artificial** (opcional): responde preguntas sobre los datos y carga información **solo si vos lo confirmás**.
+
+## Un vistazo
+
+<table>
+  <tr>
+    <td width="50%"><img src="img/instituciones.png" alt="Instituciones"><br><sub><b>Instituciones</b> — hospitales, clínicas y farmacias, con quién del comité está a cargo.</sub></td>
+    <td width="50%"><img src="img/casos.png" alt="Casos"><br><sub><b>Casos</b> — seguimiento de pacientes, médicos e instituciones.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="img/agenda.png" alt="Calendario del comité"><br><sub><b>Agenda</b> — reuniones, guardias y ausencias en un calendario unificado.</sub></td>
+    <td><img src="img/tableros.png" alt="Tableros de tareas"><br><sub><b>Tableros</b> — tareas del comité en columnas y tarjetas.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="img/informes.png" alt="Informes mensuales"><br><sub><b>Informes</b> — entrega mensual y cobertura de cada miembro.</sub></td>
+    <td><img src="img/presentaciones.png" alt="Presentaciones"><br><sub><b>Presentaciones</b> — agenda, estado y estadísticas.</sub></td>
+  </tr>
+</table>
+
+### También en el celular
+
+<p align="center">
+  <img src="img/celular.png" alt="La misma pantalla en un celular" width="260">
+</p>
+
+Funciona en el navegador, adaptado a pantallas chicas, y se puede instalar como una app.
+
+## Tus datos están protegidos
+
+- 🔐 **Cifrado por campo**: los datos de personas se guardan ilegibles para quien no tenga la clave.
+- 🔒 **Arranca bloqueado**: al encender el sistema, nadie entra hasta que se escribe la **frase maestra**. Quien se lleve el equipo apagado no puede leer nada. Hay un **kit de recuperación** para guardar en papel.
+- 🛡️ **Cada persona con su cuenta**, verificación en dos pasos, llaves de acceso o biometría, permisos por sección y registro de quién hizo qué.
+- 💾 **Copias de seguridad cifradas** y automáticas, a una carpeta del equipo y, si querés, a la nube.
+- 🇦🇷 **Pensado para la ley argentina de protección de datos**, con cuidados explicados sin tecnicismos.
+- ✍️ **Actualizaciones firmadas**: el programa solo acepta versiones firmadas por el proyecto y verifica cada descarga.
+- 🧠 **Asistente de IA sin retención**: usa Amazon en Europa y no guarda lo que se le consulta.
+
+**Los datos son del comité**: cada comité tiene su propia instalación y el proyecto no tiene acceso a ellos.
+
+## Dónde funciona
+
+- **Un solo programa** para macOS, Windows y Linux. No necesita instalar bases de datos, Docker ni Python.
+- **En un equipo del comité** (una PC, una Mac o una mini PC que quede prendida) o **en la nube de Amazon (AWS)**, sin servidor propio. En la nube hay botón de *Actualizar* y *Volver atrás*.
+- **Un comité por instalación.**
+
+## Cómo empezar
+
+1. **[Descargá la última versión](https://github.com/ceh-teams/ceh-releases/releases/latest)** para tu equipo (tabla de abajo).
+2. **Instalala** con los pasos de más abajo.
+3. **Completá el asistente** y **guardá el kit de recuperación en papel**, en un lugar seguro. Sin la frase maestra ni el código de recuperación, los datos no se pueden recuperar.
 
 ## Qué archivo bajar
 
