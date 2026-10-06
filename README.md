@@ -2,7 +2,7 @@
 
 Acá se publican los **instaladores y las actualizaciones** de CEH Manager, el sistema de gestión para comités de enlace con hospitales (médicos, instituciones, casos, agenda y asistente de IA).
 
-Este repositorio **solo tiene las descargas**. El código fuente no se publica.
+Este repositorio **solo tiene las descargas**. El código fuente es privado, pero **podés pedir acceso** para verlo y reportar errores (ver [Código fuente y reporte de errores](#código-fuente-y-reporte-de-errores)).
 
 > **¿Primera vez?** Bajá la versión más reciente desde **[Releases](https://github.com/ceh-teams/ceh-releases/releases/latest)**, instalala con los pasos de abajo y, al terminar el asistente, **guardá el kit de recuperación en papel**. Sin la frase maestra ni el código de recuperación, los datos no se pueden recuperar.
 
@@ -87,6 +87,18 @@ Si ves una versión marcada **de seguridad**, actualizá cuanto antes.
 ## En la nube de Amazon (AWS)
 
 El archivo `ceh-manager_<versión>_lambda_arm64.zip` es el programa para AWS Lambda. Quien despliega la pila de CloudFormation necesita su **URL** (la de este repositorio, bajo `releases/download/`) y su **huella SHA-256**, que figura en `latest.json` (artefacto `lambda`). Si la huella no coincide, no se instala nada.
+
+## Código fuente y reporte de errores
+
+El código fuente está en un repositorio privado de la organización **ceh-teams**. Si querés verlo, revisarlo o ayudar a mejorarlo, **te invitamos a unirte a la organización**:
+
+1. Necesitás una cuenta de GitHub (es gratis).
+2. [Abrí una solicitud](https://github.com/ceh-teams/ceh-releases/issues/new?title=Quiero+unirme+a+la+organizaci%C3%B3n) en este repositorio con el título *Quiero unirme a la organización*, indicando tu usuario de GitHub y, en una línea, para qué querés acceso (revisar el código, reportar errores, colaborar).
+3. Quien mantiene el proyecto te envía la invitación. Cuando la aceptes vas a ver el código y vas a poder abrir *issues* en el repositorio privado.
+
+**Para reportar un error sin unirte**, [abrí un issue](https://github.com/ceh-teams/ceh-releases/issues/new) acá. Contá qué hacías, qué esperabas que pasara, qué pasó, la versión (`ceh version`) y tu sistema operativo.
+
+> ⚠️ **Este repositorio es público: lo que escribas lo puede leer cualquiera.** No pegues nombres de pacientes, datos de médicos o instituciones, capturas con datos reales, frases maestras, códigos de recuperación ni claves. Si hace falta mostrar un problema, usá datos inventados o tachá todo lo sensible. Para un problema de **seguridad**, no lo publiques: pedí un contacto privado en un issue sin detalles.
 
 ## Datos y privacidad
 
