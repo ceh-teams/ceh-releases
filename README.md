@@ -176,3 +176,13 @@ El código fuente está en un repositorio privado de la organización **ceh-team
 ## Datos y privacidad
 
 Cada comité tiene su propia instalación y sus propios datos; el proyecto no tiene acceso a ellos. Este repositorio no recibe información de quienes descargan o usan el programa más allá de lo que GitHub registra en cualquier descarga.
+
+## Descargo de responsabilidad
+
+- **Sin garantías.** El programa se entrega «tal cual», sin garantía de ningún tipo. El uso es bajo responsabilidad de cada comité.
+- **No es asesoramiento médico ni legal.** CEH Manager es una herramienta de organización; no reemplaza el criterio profesional ni el asesoramiento de un abogado.
+- **El comité es responsable de sus datos.** Guarda datos de personas, muchos de salud (Ley 25.326 de Protección de Datos Personales). El proyecto no accede a esos datos ni se hace cargo de su cuidado: inscripción ante la AAIP, consentimientos, accesos y copias son tarea del comité.
+- **Frase maestra y código de recuperación.** Sin ellos los datos no se pueden recuperar y nadie del proyecto puede ayudar. Guardalos en papel, en lugares distintos.
+- **Asistente de IA opcional.** Puede equivocarse: revisá siempre sus respuestas antes de confirmar una carga. Si se activa, las consultas viajan al proveedor configurado.
+- **Capturas de ejemplo.** Las imágenes son del modo demo, con datos inventados.
+- **Sin vínculo oficial.** Los formularios oficiales y nombres de organismos que se mencionan pertenecen a sus titulares; este proyecto no representa a ninguno.
