@@ -63,7 +63,7 @@ Funciona en el navegador, adaptado a pantallas chicas, y se puede instalar como 
 - 💾 **Copias de seguridad cifradas** y automáticas, a una carpeta del equipo y, si querés, a la nube.
 - 🇦🇷 **Pensado para la ley argentina de protección de datos**, con cuidados explicados sin tecnicismos.
 - ✍️ **Actualizaciones firmadas**: el programa solo acepta versiones firmadas por el proyecto y verifica cada descarga.
-- 🧠 **Asistente de IA sin retención**: usa Amazon en Europa y no guarda lo que se le consulta.
+- 🧠 **Asistente de IA sin retención**: usa [Scaleway](https://www.scaleway.com/en/security-and-compliance/) en París (Unión Europea), que no guarda lo que se le consulta ni lo usa para entrenar. Scaleway tiene certificación **ISO/IEC 27001:2022** y **HDS** (alojamiento de datos de salud), cumple el GDPR, no está sujeta a la CLOUD Act de EE. UU. y ofrece un acuerdo de procesamiento de datos (DPA).
 
 **Los datos son del comité**: cada comité tiene su propia instalación y el proyecto no tiene acceso a ellos.
 
@@ -177,11 +177,22 @@ El código fuente está en un repositorio privado de la organización **ceh-team
 
 Cada comité tiene su propia instalación y sus propios datos; el proyecto no tiene acceso a ellos. Este repositorio no recibe información de quienes descargan o usan el programa más allá de lo que GitHub registra en cualquier descarga.
 
+## Inscripción ante la AAIP
+
+El sistema guarda datos personales, muchos de salud, así que **cada comité tiene que inscribirse** en el Registro Nacional de Bases de Datos Personales de la Agencia de Acceso a la Información Pública. Todo se hace por internet en [Trámites a Distancia](https://www.argentina.gob.ar/aaip/datospersonales/tramites), con clave fiscal nivel 2 o superior:
+
+1. [Inscribir al comité como responsable](https://www.argentina.gob.ar/inscribir-un-responsable-de-bases-de-datos-personales-privadas) (una sola vez, antes que la base).
+2. [Registrar la base de datos](https://www.argentina.gob.ar/registrar-bases-de-datos-personales-privadas). El número de inscripción se carga en la política de privacidad del sistema.
+3. [Descargar el certificado](https://www.argentina.gob.ar/aaip/datospersonales/certificado-inscripcion-registro-nacional-bases-datos-personales) con código QR y guardarlo.
+4. Si después cambia algo (domicilio, dónde se alojan los datos, se activa el asistente de IA), [modificar la base](https://www.argentina.gob.ar/modificar-bases-privadas) o [los datos del responsable](https://www.argentina.gob.ar/modificar-datos-de-un-responsable-de-bases-de-datos-personales-privadas).
+
+Consultas: registrobasesdedatos@aaip.gob.ar.
+
 ## Descargo de responsabilidad
 
 - **Sin garantías.** El programa se entrega «tal cual», sin garantía de ningún tipo. El uso es bajo responsabilidad de cada comité.
 - **No es asesoramiento médico ni legal.** CEH Manager es una herramienta de organización; no reemplaza el criterio profesional ni el asesoramiento de un abogado.
-- **El comité es responsable de sus datos.** Guarda datos de personas, muchos de salud (Ley 25.326 de Protección de Datos Personales). El proyecto no accede a esos datos ni se hace cargo de su cuidado: inscripción ante la AAIP, consentimientos, accesos y copias son tarea del comité.
+- **El comité es responsable de sus datos.** Guarda datos de personas, muchos de salud (Ley 25.326 de Protección de Datos Personales). El proyecto no accede a esos datos ni se hace cargo de su cuidado: inscripción ante la AAIP ([cómo](#inscripción-ante-la-aaip)), consentimientos, accesos y copias son tarea del comité.
 - **Frase maestra y código de recuperación.** Sin ellos los datos no se pueden recuperar y nadie del proyecto puede ayudar. Guardalos en papel, en lugares distintos.
 - **Asistente de IA opcional.** Puede equivocarse: revisá siempre sus respuestas antes de confirmar una carga. Si se activa, las consultas viajan al proveedor configurado.
 - **Capturas de ejemplo.** Las imágenes son del modo demo, con datos inventados.
