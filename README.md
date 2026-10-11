@@ -95,7 +95,7 @@ En cada versión, elegí el que corresponde a tu equipo (`<versión>` es el núm
 | Linux Debian / Ubuntu | `ceh-manager_<versión>_amd64.deb` (o `_arm64`) |
 | Linux Fedora / RHEL | `ceh-manager-<versión>-1.x86_64.rpm` (o `.aarch64`) |
 | Otro Linux | `ceh-manager_<versión>_linux_amd64.tar.gz` (o `_arm64`) |
-| Nube de Amazon (AWS) | `ceh-manager_<versión>_lambda_arm64.zip` |
+| Nube de Amazon (AWS) | `ceh-manager_<versión>_lambda_arm64.zip` y la [plantilla de CloudFormation](aws/ceh.yaml) (guía: [aws/README.md](aws/README.md)) |
 
 Si no sabés qué procesador tiene tu Mac: menú  → *Acerca de esta Mac*.
 
@@ -166,7 +166,9 @@ Si ves una versión marcada **de seguridad**, actualizá cuanto antes.
 
 ## En la nube de Amazon (AWS)
 
-El archivo `ceh-manager_<versión>_lambda_arm64.zip` es el programa para AWS Lambda. Quien despliega la pila de CloudFormation necesita su **URL** (la de este repositorio, bajo `releases/download/`) y su **huella SHA-256**, que figura en `latest.json` (artefacto `lambda`). Si la huella no coincide, no se instala nada.
+Sin equipo que mantener: el sistema corre como una función de AWS Lambda en **la cuenta de AWS de tu comité**. La **[guía paso a paso](aws/README.md)** explica cómo instalarlo, actualizarlo y qué cuesta, y la **[plantilla de CloudFormation](aws/ceh.yaml)** crea todo en tu cuenta (bucket privado cifrado, tabla, función, tareas programadas y alarma de gasto).
+
+La plantilla te pide dos datos de la versión: el **enlace** al paquete `ceh-manager_<versión>_lambda_arm64.zip` y su **huella SHA-256**, que figura en `latest.json` (artefacto `lambda`). Si la huella no coincide, no se instala nada.
 
 ## Código fuente y reporte de errores
 

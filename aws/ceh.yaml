@@ -1,0 +1,513 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  CEH Manager sin servidor (AWS Lambda). Crea el bucket privado con los datos
+  cifrados, la función con su dirección HTTPS, las tareas programadas, el
+  presupuesto con alarma y los permisos mínimos. Guía paso a paso:
+  https://github.com/ceh-teams/ceh-releases/blob/main/aws/README.md (en el
+  código fuente: docs/nube-aws.md y docs/adr/0009). Regiones de la UE
+  recomendadas (Ley 25.326: país adecuado).
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: Versión del programa }
+        Parameters: [VersionCEH, CodigoURL, CodigoSHA256]
+      - Label: { default: "Copiloto (IA, opcional)" }
+        Parameters: [ModeloBedrock, RegionBedrock]
+      - Label: { default: Avisos y costo }
+        Parameters: [CorreoAlertas, PresupuestoUSD]
+      - Label: { default: Opciones avanzadas }
+        Parameters: [ConcurrenciaMaxima]
+
+Parameters:
+  VersionCEH:
+    Type: String
+    AllowedPattern: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'
+    Description: Versión que se instala, por ejemplo 4.1.0.
+  CodigoURL:
+    Type: String
+    AllowedPattern: '^https://github\.com/ceh-teams/ceh-releases/releases/download/.+\.zip$'
+    Description: >-
+      Enlace al paquete ceh-manager_<versión>_lambda_arm64.zip de la versión
+      (en la página de versiones del proyecto).
+  CodigoSHA256:
+    Type: String
+    AllowedPattern: '^[0-9a-fA-F]{64}$'
+    Description: >-
+      Huella SHA-256 de ese paquete, tal como figura en el archivo latest.json
+      firmado de la versión. Si no coincide, no se instala nada.
+  CorreoAlertas:
+    Type: String
+    AllowedPattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    Description: Correo al que avisa el presupuesto si el gasto se acerca al límite.
+  PresupuestoUSD:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    Description: Gasto mensual (en dólares) a partir del cual se envía la alarma.
+  ModeloBedrock:
+    Type: String
+    Default: ""
+    AllowedValues: ["", "auto", "qwen.qwen3-235b-a22b-2507-v1:0"]
+    Description: >-
+      Copiloto: vacío = apagado; "auto" = el sistema elige en cada consulta
+      entre google.gemma-4-e2b, google.gemma-4-26b-a4b,
+      qwen.qwen3-235b-a22b-2507-v1:0 y minimax.minimax-m2.5 según la
+      complejidad; o fijar solo qwen.qwen3-235b-a22b-2507-v1:0. Todos se sirven
+      dentro de eu-central-1, sin perfiles entre regiones (ver docs/copiloto.md).
+  RegionBedrock:
+    Type: String
+    Default: eu-central-1
+    AllowedValues: [eu-central-1]
+    Description: Región de Bedrock. Fija en Frankfurt.
+  ConcurrenciaMaxima:
+    Type: Number
+    Default: 0
+    MinValue: 0
+    Description: >-
+      Máximo de ejecuciones simultáneas (pone un techo al gasto si alguien
+      martilla la dirección). 0 = sin reservar (las cuentas nuevas tienen un
+      límite bajo y AWS puede rechazar reservar).
+
+Conditions:
+  ReservarConcurrencia: !Not [!Equals [!Ref ConcurrenciaMaxima, 0]]
+  HayCopiloto: !Not [!Equals [!Ref ModeloBedrock, ""]]
+  CopilotoAuto: !Equals [!Ref ModeloBedrock, "auto"]
+
+Resources:
+  # --- Datos ---------------------------------------------------------------
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          - Id: versiones-viejas
+            Status: Enabled
+            NoncurrentVersionExpiration: { NoncurrentDays: 30 }
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 }
+          - Id: copias-viejas
+            Status: Enabled
+            Prefix: copias/
+            ExpirationInDays: 90
+          - Id: codigo-viejo
+            Status: Enabled
+            Prefix: codigo/
+            ExpirationInDays: 90
+          # Lotes grandes del registro (ADR 0010): la bitácora los olvida a
+          # los 14 días y una instantánea los cubre mucho antes.
+          - Id: lotes-grandes
+            Status: Enabled
+            Prefix: registro/
+            ExpirationInDays: 30
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: SoloPorHTTPS
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: [!GetAtt Bucket.Arn, !Sub "${Bucket.Arn}/*"]
+            Condition: { Bool: { "aws:SecureTransport": "false" } }
+
+  # --- Código inicial: se baja del proyecto y se verifica la huella ----------
+  RolCopiarCodigo:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: guardar-codigo
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${Bucket.Arn}/codigo/*"
+
+  CopiarCodigo:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs24.x
+      Handler: index.handler
+      Timeout: 300
+      MemorySize: 1024
+      Role: !GetAtt RolCopiarCodigo.Arn
+      Code:
+        ZipFile: |
+          const https = require("https");
+          const crypto = require("crypto");
+          const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+          const response = require("cfn-response");
+          const bajar = (url, saltos = 5) => new Promise((ok, mal) => {
+            https.get(url, { headers: { "User-Agent": "ceh-manager-instalador" } }, (r) => {
+              if ([301, 302, 303, 307, 308].includes(r.statusCode) && r.headers.location && saltos > 0) {
+                r.resume();
+                return ok(bajar(new URL(r.headers.location, url).toString(), saltos - 1));
+              }
+              if (r.statusCode !== 200) { r.resume(); return mal(new Error("HTTP " + r.statusCode)); }
+              const trozos = [];
+              r.on("data", (c) => trozos.push(c));
+              r.on("end", () => ok(Buffer.concat(trozos)));
+            }).on("error", mal);
+          });
+          exports.handler = async (event, context) => {
+            try {
+              if (event.RequestType === "Delete") return await response.send(event, context, response.SUCCESS, {});
+              const p = event.ResourceProperties;
+              const cuerpo = await bajar(p.Url);
+              const huella = crypto.createHash("sha256").update(cuerpo).digest("hex");
+              if (huella.toLowerCase() !== p.Sha256.toLowerCase()) {
+                throw new Error("La huella del paquete no coincide: esperada " + p.Sha256 + ", recibida " + huella);
+              }
+              await new S3Client({}).send(new PutObjectCommand({ Bucket: p.Bucket, Key: p.Clave, Body: cuerpo }));
+              await response.send(event, context, response.SUCCESS, { Huella: huella });
+            } catch (e) {
+              console.error(e);
+              await response.send(event, context, response.FAILED, {}, undefined, false);
+            }
+          };
+
+  CodigoInicial:
+    Type: Custom::CopiarCodigo
+    Properties:
+      ServiceToken: !GetAtt CopiarCodigo.Arn
+      Url: !Ref CodigoURL
+      Sha256: !Ref CodigoSHA256
+      Bucket: !Ref Bucket
+      Clave: !Sub "codigo/${VersionCEH}.zip"
+
+  # --- Función ---------------------------------------------------------------
+  GrupoDeLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-ceh"
+      RetentionInDays: 7
+
+  # Mensajes del chat, conversaciones del copiloto y registro de lotes de
+  # la base (ADR 0010). Capacidad provisionada chica (10/10; los ítems de más
+  # de 16 KB van al bucket): el nivel gratuito (25/25 por cuenta)
+  # permanente de DynamoDB cubre la provisionada, no la bajo demanda. Está
+  # cifrada en reposo (clave propiedad de AWS, sin costo) y los textos de los
+  # mensajes además van cifrados por el sistema con la clave del comité.
+  TablaChat:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PROVISIONED
+      ProvisionedThroughput: { ReadCapacityUnits: 10, WriteCapacityUnits: 10 }
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+      DeletionProtectionEnabled: true
+      # Las conversaciones del copiloto vencen solas (atributo expira); los
+      # mensajes del chat no lo llevan.
+      TimeToLiveSpecification: { AttributeName: expira, Enabled: true }
+
+  RolFuncion:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ceh-minimo
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Logs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${GrupoDeLogs.Arn}:*"
+              - Sid: DatosEnElBucket
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub "${Bucket.Arn}/*"
+              - Sid: ListarElBucket
+                Effect: Allow
+                Action: [s3:ListBucket, s3:ListBucketVersions]
+                Resource: !GetAtt Bucket.Arn
+              - Sid: MensajesDelChat
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchWriteItem
+                Resource: !GetAtt TablaChat.Arn
+              - Sid: ClaveDeLaBoveda
+                Effect: Allow
+                Action: [ssm:GetParameter, ssm:PutParameter]
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ceh/${AWS::StackName}/boveda"
+              # Cada turno del copiloto corre en una invocación asíncrona de la
+              # misma función (el pedido web no espera al modelo). Va en la
+              # política base y no en la de Bedrock: el copiloto con Scaleway
+              # (que se carga desde Integraciones) también la necesita.
+              - Sid: TurnosEnSegundoPlano
+                Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-ceh:live"
+              - Sid: ActualizarSoloEstaFuncion
+                Effect: Allow
+                Action:
+                  - lambda:UpdateFunctionCode
+                  - lambda:GetFunctionConfiguration
+                  - lambda:GetAlias
+                  - lambda:UpdateAlias
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-ceh"
+                  - !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-ceh:*"
+
+  PoliticaCopiloto:
+    Type: AWS::IAM::RolePolicy
+    Condition: HayCopiloto
+    Properties:
+      RoleName: !Ref RolFuncion
+      PolicyName: ceh-copiloto
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # Solo modelos del catálogo, en su región: sin perfiles entre
+          # regiones, así la inferencia no sale de eu-central-1.
+          - Sid: ModeloDelCopiloto
+            Effect: Allow
+            Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
+            Resource:
+              - !Sub "arn:${AWS::Partition}:bedrock:${RegionBedrock}::foundation-model/qwen.qwen3-235b-a22b-2507-v1:0"
+              - !If
+                - CopilotoAuto
+                - !Sub "arn:${AWS::Partition}:bedrock:${RegionBedrock}::foundation-model/minimax.minimax-m2.5"
+                - !Ref AWS::NoValue
+          # Los Gemma 4 solo se sirven por el endpoint bedrock-mantle.
+          - !If
+            - CopilotoAuto
+            - Sid: ModelosMantleDelCopiloto
+              Effect: Allow
+              Action: bedrock-mantle:CreateInference
+              Resource: !Sub "arn:${AWS::Partition}:bedrock-mantle:${RegionBedrock}:${AWS::AccountId}:project/*"
+            - !Ref AWS::NoValue
+          # Al arrancar, la función deja la cuenta en retención cero de datos
+          # de Bedrock (modo "none") y no activa el copiloto si no puede. Solo
+          # puede escribir ese modo: la condición impide cualquier otro.
+          - Sid: LeerRetencionDeBedrock
+            Effect: Allow
+            Action: bedrock:GetAccountDataRetention
+            Resource: "*"
+          - Sid: RetencionCeroDeBedrock
+            Effect: Allow
+            Action: bedrock:PutAccountDataRetention
+            Resource: "*"
+            Condition:
+              StringEquals:
+                "bedrock:DataRetentionMode": none
+          - !If
+            - CopilotoAuto
+            - Sid: LeerRetencionDeMantle
+              Effect: Allow
+              Action: bedrock-mantle:GetAccountDataRetention
+              Resource: "*"
+            - !Ref AWS::NoValue
+          - !If
+            - CopilotoAuto
+            - Sid: RetencionCeroDeMantle
+              Effect: Allow
+              Action: bedrock-mantle:PutAccountDataRetention
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  "bedrock-mantle:DataRetentionMode": none
+            - !Ref AWS::NoValue
+
+  Funcion:
+    Type: AWS::Lambda::Function
+    DependsOn: [CodigoInicial, GrupoDeLogs]
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ceh"
+      Runtime: provided.al2023
+      Architectures: [arm64]
+      Handler: bootstrap
+      MemorySize: 256
+      # El copiloto puede encadenar varias llamadas al modelo; solo se cobra
+      # lo que dura cada pedido.
+      Timeout: 300
+      EphemeralStorage: { Size: 1024 }
+      ReservedConcurrentExecutions: !If [ReservarConcurrencia, !Ref ConcurrenciaMaxima, !Ref "AWS::NoValue"]
+      Role: !GetAtt RolFuncion.Arn
+      Code:
+        S3Bucket: !Ref Bucket
+        S3Key: !Sub "codigo/${VersionCEH}.zip"
+      Environment:
+        Variables:
+          CEH_BUCKET: !Ref Bucket
+          CEH_TABLA_CHAT: !Ref TablaChat
+          CEH_PARAM_BOVEDA: !Sub "/ceh/${AWS::StackName}/boveda"
+          CEH_FUNCION: !Sub "${AWS::StackName}-ceh"
+          CEH_ALIAS: live
+          CEH_BEDROCK_MODELO: !Ref ModeloBedrock
+          CEH_BEDROCK_REGION: !Ref RegionBedrock
+          CEH_BEDROCK_RETENCION_CERO: "1"
+
+  VersionInicial:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref Funcion
+
+  Alias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName: !Ref Funcion
+      FunctionVersion: !GetAtt VersionInicial.Version
+      Name: live
+
+  # Los turnos del copiloto no se reintentan: si una invocación falla, el
+  # turno vence y la persona ve el aviso para volver a preguntar.
+  InvocacionAsincrona:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref Funcion
+      Qualifier: live
+      MaximumRetryAttempts: 0
+      MaximumEventAgeInSeconds: 300
+    DependsOn: Alias
+
+  DireccionHTTPS:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref Funcion
+      Qualifier: live
+      AuthType: NONE
+    DependsOn: Alias
+
+  PermisoDireccion:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref Alias
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  PermisoInvocarViaDireccion:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Alias
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
+  # --- Tareas periódicas (copias, recordatorios, purgas) ---------------------
+  RolProgramador:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: scheduler.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invocar-la-funcion
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: [!Ref Alias]
+
+  Programador:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Description: Tareas periódicas de CEH Manager
+      ScheduleExpression: rate(5 minutes)
+      FlexibleTimeWindow: { Mode: "OFF" }
+      Target:
+        Arn: !Ref Alias
+        RoleArn: !GetAtt RolProgramador.Arn
+        Input: '{"ceh":"programador"}'
+        RetryPolicy: { MaximumRetryAttempts: 0 }
+
+  Limpieza:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Description: Depuración semanal de registros vencidos (solo actúa si está activada en Integraciones)
+      ScheduleExpression: cron(0 4 ? * SUN *)
+      ScheduleExpressionTimezone: America/Argentina/Buenos_Aires
+      FlexibleTimeWindow: { Mode: "OFF" }
+      Target:
+        Arn: !Ref Alias
+        RoleArn: !GetAtt RolProgramador.Arn
+        Input: '{"ceh":"limpieza"}'
+        RetryPolicy: { MaximumRetryAttempts: 0 }
+
+  # --- Costo ----------------------------------------------------------------
+  Presupuesto:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: !Ref PresupuestoUSD, Unit: USD }
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CorreoAlertas }]
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CorreoAlertas }]
+
+Outputs:
+  DireccionDelSistema:
+    Description: Dirección del sistema. Abrila para hacer la instalación inicial.
+    Value: !GetAtt DireccionHTTPS.FunctionUrl
+  Bucket:
+    Description: Bucket con los datos (cifrados), las copias y el código.
+    Value: !Ref Bucket
+  TablaChat:
+    Description: Tabla de DynamoDB con los mensajes del chat (no se borra con la pila).
+    Value: !Ref TablaChat
+  Funcion:
+    Description: Función que ejecuta el sistema.
+    Value: !Ref Funcion
