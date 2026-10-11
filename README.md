@@ -29,6 +29,7 @@
 - 💬 **Chat y tableros de tareas** tipo Kanban, con avisos en el sistema y en el celular.
 - 📥 **Carga de listas** de médicos e instituciones desde Excel o CSV, con vista previa y sin duplicar.
 - ✨ **Asistente de inteligencia artificial** (opcional): responde preguntas sobre los datos y carga información **solo si vos lo confirmás**.
+- 🔎 **Búsqueda en internet de médicos e instituciones** (opcional, desde la versión 4.3.0): el asistente encuentra especialistas por **especialidad y lugar**, o los médicos que atienden en una institución ya cargada. Cada dato que se carga guarda **de qué página salió y qué día se leyó** (solapa «Fuentes» de la ficha). No busca personas por su nombre.
 
 ## Un vistazo
 
@@ -85,8 +86,10 @@ En cada versión, elegí el que corresponde a tu equipo (`<versión>` es el núm
 
 | Tu equipo | Archivo |
 |---|---|
+| Mac (instalador, Intel y Apple Silicon) | `ceh-manager-<versión>.pkg` |
 | Mac (Apple Silicon: M1, M2…) | `ceh-manager_<versión>_darwin_arm64.tar.gz` |
 | Mac (Intel) | `ceh-manager_<versión>_darwin_amd64.tar.gz` |
+| Windows (instalador, 64 bits) | `ceh-manager-<versión>-x64.msi` (ARM: `-arm64.msi`) |
 | Windows (64 bits) | `ceh-manager_<versión>_windows_amd64.zip` |
 | Windows en ARM | `ceh-manager_<versión>_windows_arm64.zip` |
 | Linux Debian / Ubuntu | `ceh-manager_<versión>_amd64.deb` (o `_arm64`) |
@@ -96,11 +99,11 @@ En cada versión, elegí el que corresponde a tu equipo (`<versión>` es el núm
 
 Si no sabés qué procesador tiene tu Mac: menú  → *Acerca de esta Mac*.
 
-Los instaladores `.pkg` (macOS) y `.msi` (Windows) se agregan a una versión cuando están listos; si no aparecen, usá el archivo comprimido, que hace lo mismo.
+Los instaladores `.pkg` (macOS) y `.msi` (Windows) se suman a una versión un rato después de publicarla; si todavía no aparecen, usá el archivo comprimido, que hace lo mismo. Cada instalador trae su huella en un archivo `.sha256` al lado.
 
 ## Verificá la descarga
 
-Cada versión trae `ceh-manager_<versión>_checksums.txt` con la huella SHA-256 de cada archivo. Comprobá que la de tu descarga coincida:
+Cada versión trae `ceh-manager_<versión>_checksums.txt` con la huella SHA-256 de cada archivo (los instaladores, en su propio `.sha256`). Comprobá que la de tu descarga coincida:
 
 - macOS / Linux: `shasum -a 256 archivo`
 - Windows (PowerShell): `Get-FileHash archivo -Algorithm SHA256`
@@ -111,13 +114,17 @@ Si no coincide, descartá el archivo y volvé a bajarlo.
 
 El sistema queda funcionando siempre y arranca con el equipo. Solo escucha en el propio equipo (`127.0.0.1:8080`). Al terminar, el instalador muestra un **enlace** para completar el asistente en el navegador.
 
-**macOS / otro Linux** — descomprimí, abrí una terminal en esa carpeta y corré:
+**macOS con el instalador** — doble clic en el `.pkg` y seguí los pasos (pide la clave de la Mac). Al terminar se abre el enlace. Por ahora el `.pkg` no está firmado por Apple: si macOS lo bloquea, andá a *Ajustes del Sistema → Privacidad y seguridad* y elegí *Abrir igualmente*.
+
+**Windows con el instalador** — doble clic en el `.msi` (pide permiso de administrador). Queda instalado como servicio; el enlace está en `C:\ProgramData\CEH Manager\instalar.url` (abrilo desde una consola de administrador). Si Windows muestra «Windows protegió su PC»: *Más información* → *Ejecutar de todas formas*.
+
+**macOS / otro Linux sin instalador** — descomprimí, abrí una terminal en esa carpeta y corré:
 
 ```
 sudo ./ceh install
 ```
 
-**Windows** — descomprimí el `.zip`, abrí *Símbolo del sistema* **como administrador**, andá a la carpeta y corré:
+**Windows sin instalador** — descomprimí el `.zip`, abrí *Símbolo del sistema* **como administrador**, andá a la carpeta y corré:
 
 ```
 ceh.exe install
@@ -141,7 +148,7 @@ Para probarlo un rato sin instalar nada, descomprimí y corré `./ceh` (en Windo
 
 1. **Generá una copia de seguridad** (*Mantenimiento → Generar copia ahora*) y confirmá que se guardó.
 2. Bajá la versión nueva y verificá su huella.
-3. Instalala **encima de la anterior** (mismo comando o paquete que usaste). Los datos no se tocan.
+3. Instalala **encima de la anterior** (mismo comando, paquete o instalador que usaste). Los datos no se tocan. Algunas versiones actualizan la base al arrancar (la 4.3.0 agrega la tabla de fuentes): por eso la copia del paso 1.
 4. Desbloqueá el sistema con la frase maestra.
 
 Para saber si hay una versión nueva sin enviar ningún dato de tu comité:
@@ -184,7 +191,7 @@ El sistema guarda datos personales, muchos de salud, así que **cada comité tie
 1. [Inscribir al comité como responsable](https://www.argentina.gob.ar/inscribir-un-responsable-de-bases-de-datos-personales-privadas) (una sola vez, antes que la base).
 2. [Registrar la base de datos](https://www.argentina.gob.ar/registrar-bases-de-datos-personales-privadas). El número de inscripción se carga en la política de privacidad del sistema.
 3. [Descargar el certificado](https://www.argentina.gob.ar/aaip/datospersonales/certificado-inscripcion-registro-nacional-bases-datos-personales) con código QR y guardarlo.
-4. Si después cambia algo (domicilio, dónde se alojan los datos, se activa el asistente de IA), [modificar la base](https://www.argentina.gob.ar/modificar-bases-privadas) o [los datos del responsable](https://www.argentina.gob.ar/modificar-datos-de-un-responsable-de-bases-de-datos-personales-privadas).
+4. Si después cambia algo (domicilio, dónde se alojan los datos, se activa el asistente de IA o la búsqueda en internet), [modificar la base](https://www.argentina.gob.ar/modificar-bases-privadas) o [los datos del responsable](https://www.argentina.gob.ar/modificar-datos-de-un-responsable-de-bases-de-datos-personales-privadas).
 
 Consultas: registrobasesdedatos@aaip.gob.ar.
 
@@ -195,5 +202,6 @@ Consultas: registrobasesdedatos@aaip.gob.ar.
 - **El comité es responsable de sus datos.** Guarda datos de personas, muchos de salud (Ley 25.326 de Protección de Datos Personales). El proyecto no accede a esos datos ni se hace cargo de su cuidado: inscripción ante la AAIP ([cómo](#inscripción-ante-la-aaip)), consentimientos, accesos y copias son tarea del comité.
 - **Frase maestra y código de recuperación.** Sin ellos los datos no se pueden recuperar y nadie del proyecto puede ayudar. Guardalos en papel, en lugares distintos.
 - **Asistente de IA opcional.** Puede equivocarse: revisá siempre sus respuestas antes de confirmar una carga. Si se activa, las consultas viajan al proveedor configurado.
+- **Búsqueda en internet opcional.** Usa buscadores de terceros (Exa, Linkup, Brave Search, Tavily), varios en EE. UU.; a ellos solo llegan la especialidad y el lugar, o el nombre y la ciudad de una institución, nunca datos de pacientes ni nombres de personas. Lo que devuelven son páginas de otros sitios: verificá cada dato antes de cargarlo. Los datos de contacto de un médico siguen siendo datos personales: cargá solo los que publica el propio profesional o su institución, y usalos solo para la tarea del comité.
 - **Capturas de ejemplo.** Las imágenes son del modo demo, con datos inventados.
 - **Sin vínculo oficial.** Los formularios oficiales y nombres de organismos que se mencionan pertenecen a sus titulares; este proyecto no representa a ninguno.
