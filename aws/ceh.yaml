@@ -424,10 +424,15 @@ Resources:
           CEH_BEDROCK_RETENCION_CERO: "1"
           CEH_TOKEN_INSTALACION: !GetAtt TokenDeInstalacion.Token
 
+  # La descripción cambia con la versión y la huella del paquete: una
+  # AWS::Lambda::Version es inmutable y CloudFormation solo publica una nueva
+  # (y mueve el alias «live») si esta propiedad cambia. Sin esto, al actualizar
+  # la pila el código se reemplaza pero «live» sigue apuntando a la anterior.
   VersionInicial:
     Type: AWS::Lambda::Version
     Properties:
       FunctionName: !Ref Funcion
+      Description: !Sub "CEH ${VersionCEH} ${CodigoSHA256}"
 
   Alias:
     Type: AWS::Lambda::Alias
