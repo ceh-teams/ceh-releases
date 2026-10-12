@@ -10,6 +10,8 @@
   &nbsp;·&nbsp;
   <a href="#cómo-empezar">Cómo empezar</a>
   &nbsp;·&nbsp;
+  <a href="https://github.com/ceh-teams/ceh-manual#readme">📖 Manual</a>
+  &nbsp;·&nbsp;
   <a href="#código-fuente-y-reporte-de-errores">Código fuente y errores</a>
 </p>
 
@@ -102,6 +104,8 @@ Funciona en el navegador, adaptado a pantallas chicas, y se puede instalar como 
 2. **Instalala** con los pasos de más abajo.
 3. **Completá el asistente** y **guardá el kit de recuperación en papel**, en un lugar seguro. Sin la frase maestra ni el código de recuperación, los datos no se pueden recuperar.
 
+> 📖 **Paso a paso:** [manual de instalación](https://github.com/ceh-teams/ceh-manual/blob/main/instalacion/01-instalacion.md), [primer arranque](https://github.com/ceh-teams/ceh-manual/blob/main/instalacion/02-primer-arranque.md) y [manual de usuario](https://github.com/ceh-teams/ceh-manual#readme).
+
 ## Qué archivo bajar
 
 En cada versión, elegí el que corresponde a tu equipo (`<versión>` es el número, por ejemplo `4.0.1`):
@@ -117,7 +121,7 @@ En cada versión, elegí el que corresponde a tu equipo (`<versión>` es el núm
 | Linux Debian / Ubuntu | `ceh-manager_<versión>_amd64.deb` (o `_arm64`) |
 | Linux Fedora / RHEL | `ceh-manager-<versión>-1.x86_64.rpm` (o `.aarch64`) |
 | Otro Linux | `ceh-manager_<versión>_linux_amd64.tar.gz` (o `_arm64`) |
-| Nube de Amazon (AWS) | `ceh-manager_<versión>_lambda_arm64.zip` y la [plantilla de CloudFormation](aws/ceh.yaml) (guía: [aws/README.md](aws/README.md)) |
+| Nube de Amazon (AWS) | `ceh-manager_<versión>_lambda_arm64.zip` y la [plantilla de CloudFormation](aws/ceh.yaml) (guía: [aws/README.md](aws/README.md); paso a paso con la cuenta: [manual AWS](https://github.com/ceh-teams/ceh-manual/blob/main/instalacion/03-aws.md)) |
 
 Si no sabés qué procesador tiene tu Mac: menú  → *Acerca de esta Mac*.
 
