@@ -23,7 +23,7 @@ No crea redes (VPC), API Gateway, CloudFront ni bases de datos con servidor: son
 
 ## Antes de empezar
 
-1. **Cuenta de AWS** con verificación en dos pasos (MFA) en el usuario raíz. Para el día a día no uses el raíz: creá un usuario administrador aparte.
+1. **Cuenta de AWS**: [crearla acá](https://portal.aws.amazon.com/billing/signup) (pide tarjeta y teléfono) y entrar luego a la [consola](https://console.aws.amazon.com/). Activá la verificación en dos pasos (MFA) en el usuario raíz ([guía de AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-mfa-for-root.html)). Para el día a día no uses el raíz: creá un usuario administrador aparte.
 2. **Región de la Unión Europea** (por ejemplo `eu-west-1`, Irlanda). Para la ley argentina de protección de datos la UE es destino adecuado; Estados Unidos y Brasil no.
 3. **El plan gratuito de las cuentas nuevas vence** (según fuentes de terceros, a los 6 meses o al agotar el crédito). Pasado ese plazo hay que pasar la cuenta al plan pago o AWS puede cerrarla. Poné un recordatorio.
 4. **Tené a mano papel y lapicera**: vas a anotar la frase maestra y el código de recuperación.
@@ -79,8 +79,20 @@ Completalo y **guardá en papel, en dos lugares distintos, la frase maestra y el
 Con el administrador, en el menú **Configuración del sistema → Integraciones**:
 
 - **Correo**: para que el sistema mande avisos.
-- **Copiloto (inteligencia artificial)**: cargá la URL del proyecto y la clave de API de [Scaleway](https://www.scaleway.com/en/security-and-compliance/) (París, sin retención de lo que se consulta).
-- **Búsqueda en internet de médicos e instituciones** (versión 4.3.0 o posterior): claves de uno o más buscadores (Exa, Linkup, Brave Search, Tavily), todos con plan gratuito. Funciona a través del copiloto y **solo envía una especialidad y un lugar** (o el nombre y la ciudad de una institución cargada), nunca datos de pacientes ni nombres de personas. Varios buscadores están en EE. UU.: cargá solo los datos de contacto que publica el propio profesional o su institución.
+- **Copiloto (inteligencia artificial)**: cargá la URL del proyecto y la clave de API de [Scaleway](https://www.scaleway.com/en/security-and-compliance/) (París, sin retención de lo que se consulta). Dónde conseguirlas:
+  1. [Crear cuenta en Scaleway](https://console.scaleway.com/register).
+  2. [Generative APIs](https://console.scaleway.com/generative-api/models): ahí figura la URL del proyecto (`https://api.scaleway.ai/<id-del-proyecto>/v1`).
+  3. [Crear la clave de API](https://www.scaleway.com/en/docs/iam/how-to/create-api-keys/) (guía de Scaleway; consola: *IAM → Claves API*).
+- **Búsqueda en internet de médicos e instituciones** (versión 4.3.0 o posterior): claves de uno o más buscadores, todos con plan gratuito. Funciona a través del copiloto y **solo envía una especialidad y un lugar** (o el nombre y la ciudad de una institución cargada), nunca datos de pacientes ni nombres de personas. Varios buscadores están en EE. UU.: cargá solo los datos de contacto que publica el propio profesional o su institución. Dónde sacar cada clave:
+
+| Buscador | Crear cuenta y obtener la clave | Precios |
+|---|---|---|
+| Exa | [dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys) | [exa.ai/pricing](https://exa.ai/pricing) |
+| Linkup | [app.linkup.so](https://app.linkup.so/) | [Precios](https://docs.linkup.so/pages/documentation/development/pricing) |
+| Brave Search | [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) | [brave.com/search/api](https://brave.com/search/api/) |
+| Tavily | [app.tavily.com](https://app.tavily.com/) | [Créditos](https://docs.tavily.com/guides/api-credits) |
+
+- **Captcha de los formularios públicos** (opcional): clave de sitio y clave secreta de Cloudflare Turnstile, en el [panel de Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) (gratis; requiere [cuenta de Cloudflare](https://dash.cloudflare.com/sign-up)).
 
 Todo es opcional: sin claves, esas funciones no existen y no sale nada a internet.
 
