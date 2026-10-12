@@ -41,13 +41,13 @@ Cada versión publica dos datos que la plantilla te pide: el **enlace** al paque
 - Entrá a la [última versión](https://github.com/ceh-teams/ceh-releases/releases/latest).
 - Abrí `latest.json`, buscá el bloque con `"os": "lambda"` y copiá su `url` y su `sha256`.
 
-Para la **4.3.0** son:
+Para la **4.4.0** son:
 
 | Dato | Valor |
 |---|---|
-| VersionCEH | `4.3.0` |
-| CodigoURL | `https://github.com/ceh-teams/ceh-releases/releases/download/v4.3.0/ceh-manager_4.3.0_lambda_arm64.zip` |
-| CodigoSHA256 | `b4c6059ce790fdd8dedab0a52f2258a73ac9f53f03b7cc6aa5eecf47fee0a30c` |
+| VersionCEH | `4.4.0` |
+| CodigoURL | `https://github.com/ceh-teams/ceh-releases/releases/download/v4.4.0/ceh-manager_4.4.0_lambda_arm64.zip` |
+| CodigoSHA256 | `582b76e91de911c85749e481b788169ffd76b58d02201e8aae39a32cd618af29` |
 
 Si usás una versión más nueva, tomá los datos de **su** `latest.json`, no de esta tabla. Si la huella no coincide con la del paquete, la instalación se cancela y no queda nada.
 
@@ -70,7 +70,7 @@ Si usás una versión más nueva, tomá los datos de **su** `latest.json`, no de
 
 ### 4. Abrí el sistema
 
-Cuando la pila diga `CREATE_COMPLETE`, en la pestaña **Salidas** copiá `DireccionDelSistema` y `TokenInstalacion`. Abrí la dirección agregándole `instalar?token=` y el valor de `TokenInstalacion` (`https://…lambda-url…/instalar?token=…`): aparece el asistente de instalación. Sin el código no deja instalar; es de un solo uso y trátalo como una clave. Requiere la versión 4.3.1 o posterior.
+Cuando la pila diga `CREATE_COMPLETE`, en la pestaña **Salidas** copiá `DireccionDelSistema` y `TokenInstalacion`. Abrí la dirección agregándole `instalar?token=` y el valor de `TokenInstalacion` (`https://…lambda-url…/instalar?token=…`): aparece el asistente de instalación. Sin el código no deja instalar; es de un solo uso y trátalo como una clave. Requiere la versión 4.4.0 o posterior (las anteriores pueden rechazar el asistente con «Pedido rechazado por la protección CSRF»).
 
 Completalo y **guardá en papel, en dos lugares distintos, la frase maestra y el código de recuperación**. Son la única forma de sacar tus datos de AWS o de recuperarlos si algo falla; nadie del proyecto puede ayudarte sin ellos. Desde ese momento el sistema se abre solo en cada arranque.
 
@@ -125,6 +125,10 @@ Se guardan **en el bucket** (`copias/`). Descargá una copia a tu equipo de vez 
 ### Con un clic
 
 En *Mantenimiento → Actualizaciones* el sistema avisa si hay versión nueva (lee un archivo público **firmado**, sin enviar datos de tu comité) y ofrece **Actualizar**: baja el paquete, verifica firma y huella, guarda un punto de restauración y cambia de versión. **Volver atrás** deja código y datos como estaban al actualizar (se pierde lo cargado desde entonces).
+
+### Automática (opcional, desde la 4.4.0)
+
+En el mismo panel podés encender la **actualización automática** (viene apagada): instala sola las versiones de parche y menores, con punto de restauración, y avisa a los administradores. Opcionalmente elegís una **ventana horaria** (hora de Argentina, por ejemplo de 02:00 a 06:00). Las versiones mayores y las que piden actualizar la plantilla se instalan a mano.
 
 ### Cuando hay que actualizar la plantilla
 
