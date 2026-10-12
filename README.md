@@ -19,6 +19,28 @@
 
 <p align="center"><sub>Las capturas son del modo demo, con datos inventados.</sub></p>
 
+## Probá la versión demo
+
+Para ver el sistema con datos inventados, sin instalar nada. **Solo en tu propia computadora y nunca con datos reales.**
+
+1. [Descargá](https://github.com/ceh-teams/ceh-releases/releases/latest) el archivo comprimido de tu equipo (`.tar.gz` o `.zip`, ver [qué archivo bajar](#qué-archivo-bajar)) y descomprimilo.
+2. Abrí una terminal en esa carpeta y arrancá el sistema en modo demo, con una carpeta de datos aparte (en Windows, `ceh.exe`):
+
+   ```
+   ./ceh serve --demo --data ./demo-datos
+   ```
+
+3. Abrí el enlace de instalación que muestra la terminal, completá el asistente y desbloqueá el sistema.
+4. En **otra terminal**, en la misma carpeta, cargá los datos de ejemplo:
+
+   ```
+   ./ceh seed-demo --data ./demo-datos
+   ```
+
+5. Entrá a [http://127.0.0.1:8081/demo](http://127.0.0.1:8081/demo): lista las cuentas de ejemplo y su clave (no piden segundo paso).
+
+Para terminar, cerrá la primera terminal (`Ctrl+C`); borrar la carpeta `demo-datos` elimina la demo. La página `/demo` solo existe en ese puerto local (`8081`): no se ve desde otra máquina ni por el puerto principal.
+
 ## Para qué sirve
 
 - 🩺 **Médicos e instituciones ordenados**: fichas, tabla y mapa, con filtros por especialidad, consultores y urgencias. Avisa cuándo hace falta volver a comunicarse con alguien («al día», «por vencer», «vencido»).
