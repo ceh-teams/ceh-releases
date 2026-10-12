@@ -92,8 +92,6 @@ Con el administrador, en el menú **Configuración del sistema → Integraciones
 | Brave Search | [api-dashboard.search.brave.com](https://api-dashboard.search.brave.com/) | [brave.com/search/api](https://brave.com/search/api/) |
 | Tavily | [app.tavily.com](https://app.tavily.com/) | [Créditos](https://docs.tavily.com/guides/api-credits) |
 
-- **Captcha de los formularios públicos** (opcional): clave de sitio y clave secreta de Cloudflare Turnstile, en el [panel de Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) (gratis; requiere [cuenta de Cloudflare](https://dash.cloudflare.com/sign-up)).
-
 Todo es opcional: sin claves, esas funciones no existen y no sale nada a internet.
 
 ### 6. Primera prueba
