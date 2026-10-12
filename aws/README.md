@@ -70,7 +70,7 @@ Si usás una versión más nueva, tomá los datos de **su** `latest.json`, no de
 
 ### 4. Abrí el sistema
 
-Cuando la pila diga `CREATE_COMPLETE`, en la pestaña **Salidas** copiá `DireccionDelSistema` y abrila en el navegador: aparece el asistente de instalación.
+Cuando la pila diga `CREATE_COMPLETE`, en la pestaña **Salidas** copiá `DireccionDelSistema` y `TokenInstalacion`. Abrí la dirección agregándole `instalar?token=` y el valor de `TokenInstalacion` (`https://…lambda-url…/instalar?token=…`): aparece el asistente de instalación. Sin el código no deja instalar; es de un solo uso y trátalo como una clave. Requiere la versión 4.3.1 o posterior.
 
 Completalo y **guardá en papel, en dos lugares distintos, la frase maestra y el código de recuperación**. Son la única forma de sacar tus datos de AWS o de recuperarlos si algo falla; nadie del proyecto puede ayudarte sin ellos. Desde ese momento el sistema se abre solo en cada arranque.
 

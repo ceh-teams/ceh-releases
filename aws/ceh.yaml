@@ -1,16 +1,14 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: >-
-  CEH Manager sin servidor (AWS Lambda). Crea el bucket privado con los datos
-  cifrados, la función con su dirección HTTPS, las tareas programadas, el
-  presupuesto con alarma y los permisos mínimos. Guía paso a paso:
-  https://github.com/ceh-teams/ceh-releases/blob/main/aws/README.md (en el
-  código fuente: docs/nube-aws.md y docs/adr/0009). Regiones de la UE
-  recomendadas (Ley 25.326: país adecuado).
+Description: "CEH Manager sin servidor (AWS Lambda). Crea el bucket privado con los datos cifrados, la funci\u00F3n \
+  con su direcci\u00F3n HTTPS, las tareas programadas, el presupuesto con alarma y los permisos m\u00EDnimos. \
+  Gu\u00EDa paso a paso: https://github.com/ceh-teams/ceh-releases/blob/main/aws/README.md (en el c\u00F3digo \
+  fuente: docs/nube-aws.md y docs/adr/0009). Regiones de la UE recomendadas (Ley 25.326: pa\u00EDs \
+  adecuado)."
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      - Label: { default: Versión del programa }
+      - Label: { default: "Versi\u00F3n del programa" }
         Parameters: [VersionCEH, CodigoURL, CodigoSHA256]
       - Label: { default: "Copiloto (IA, opcional)" }
         Parameters: [ModeloBedrock, RegionBedrock]
@@ -23,51 +21,45 @@ Parameters:
   VersionCEH:
     Type: String
     AllowedPattern: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'
-    Description: Versión que se instala, por ejemplo 4.1.0.
+    Description: "Versi\u00F3n que se instala, por ejemplo 4.1.0."
   CodigoURL:
     Type: String
     AllowedPattern: '^https://github\.com/ceh-teams/ceh-releases/releases/download/.+\.zip$'
-    Description: >-
-      Enlace al paquete ceh-manager_<versión>_lambda_arm64.zip de la versión
-      (en la página de versiones del proyecto).
+    Description: "Enlace al paquete ceh-manager_<versi\u00F3n>_lambda_arm64.zip de la versi\u00F3n (en la p\u00E1gina de \
+      versiones del proyecto)."
   CodigoSHA256:
     Type: String
     AllowedPattern: '^[0-9a-fA-F]{64}$'
-    Description: >-
-      Huella SHA-256 de ese paquete, tal como figura en el archivo latest.json
-      firmado de la versión. Si no coincide, no se instala nada.
+    Description: "Huella SHA-256 de ese paquete, tal como figura en el archivo latest.json firmado de la \
+      versi\u00F3n. Si no coincide, no se instala nada."
   CorreoAlertas:
     Type: String
     AllowedPattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
-    Description: Correo al que avisa el presupuesto si el gasto se acerca al límite.
+    Description: "Correo al que avisa el presupuesto si el gasto se acerca al l\u00EDmite."
   PresupuestoUSD:
     Type: Number
     Default: 1
     MinValue: 1
-    Description: Gasto mensual (en dólares) a partir del cual se envía la alarma.
+    Description: "Gasto mensual (en d\u00F3lares) a partir del cual se env\u00EDa la alarma."
   ModeloBedrock:
     Type: String
     Default: ""
     AllowedValues: ["", "auto", "qwen.qwen3-235b-a22b-2507-v1:0"]
-    Description: >-
-      Copiloto: vacío = apagado; "auto" = el sistema elige en cada consulta
-      entre google.gemma-4-e2b, google.gemma-4-26b-a4b,
-      qwen.qwen3-235b-a22b-2507-v1:0 y minimax.minimax-m2.5 según la
-      complejidad; o fijar solo qwen.qwen3-235b-a22b-2507-v1:0. Todos se sirven
-      dentro de eu-central-1, sin perfiles entre regiones (ver docs/copiloto.md).
+    Description: "Copiloto: vac\u00EDo = apagado; \"auto\" = el sistema elige en cada consulta entre \
+      google.gemma-4-e2b, google.gemma-4-26b-a4b, qwen.qwen3-235b-a22b-2507-v1:0 y \
+      minimax.minimax-m2.5 seg\u00FAn la complejidad; o fijar solo qwen.qwen3-235b-a22b-2507-v1:0. Todos \
+      se sirven dentro de eu-central-1, sin perfiles entre regiones (ver docs/copiloto.md)."
   RegionBedrock:
     Type: String
     Default: eu-central-1
     AllowedValues: [eu-central-1]
-    Description: Región de Bedrock. Fija en Frankfurt.
+    Description: "Regi\u00F3n de Bedrock. Fija en Frankfurt."
   ConcurrenciaMaxima:
     Type: Number
     Default: 0
     MinValue: 0
-    Description: >-
-      Máximo de ejecuciones simultáneas (pone un techo al gasto si alguien
-      martilla la dirección). 0 = sin reservar (las cuentas nuevas tienen un
-      límite bajo y AWS puede rechazar reservar).
+    Description: "M\u00E1ximo de ejecuciones simult\u00E1neas (pone un techo al gasto si alguien martilla la direcci\u00F3n). 0 \
+      = sin reservar (las cuentas nuevas tienen un l\u00EDmite bajo y AWS puede rechazar reservar)."
 
 Conditions:
   ReservarConcurrencia: !Not [!Equals [!Ref ConcurrenciaMaxima, 0]]
@@ -199,6 +191,52 @@ Resources:
       Sha256: !Ref CodigoSHA256
       Bucket: !Ref Bucket
       Clave: !Sub "codigo/${VersionCEH}.zip"
+
+  # --- Código de instalación -------------------------------------------------
+  # Lo que pide /instalar (docs/primer-arranque.md). Sin él la instalación no
+  # se puede completar en la nube, así que lo genera la pila una vez y lo
+  # muestran las salidas. La función lo recibe en CEH_TOKEN_INSTALACION. Es el
+  # ID físico del recurso: al actualizar la pila conserva el mismo valor.
+  RolTokenInstalacion:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  GeneradorTokenInstalacion:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs24.x
+      Handler: index.handler
+      Timeout: 30
+      MemorySize: 128
+      Role: !GetAtt RolTokenInstalacion.Arn
+      Code:
+        ZipFile: |
+          const crypto = require("crypto");
+          const response = require("cfn-response");
+          exports.handler = async (event, context) => {
+            try {
+              if (event.RequestType === "Delete") return await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+              // Igual que el servidor: 18 bytes en base64url. Al actualizar, el mismo valor.
+              const token = event.RequestType === "Create" ? crypto.randomBytes(18).toString("base64url") : event.PhysicalResourceId;
+              await response.send(event, context, response.SUCCESS, { Token: token }, token);
+            } catch (e) {
+              console.error(e);
+              await response.send(event, context, response.FAILED, {}, undefined, false);
+            }
+          };
+
+  TokenDeInstalacion:
+    Type: Custom::TokenInstalacion
+    Properties:
+      ServiceToken: !GetAtt GeneradorTokenInstalacion.Arn
 
   # --- Función ---------------------------------------------------------------
   GrupoDeLogs:
@@ -384,6 +422,7 @@ Resources:
           CEH_BEDROCK_MODELO: !Ref ModeloBedrock
           CEH_BEDROCK_REGION: !Ref RegionBedrock
           CEH_BEDROCK_RETENCION_CERO: "1"
+          CEH_TOKEN_INSTALACION: !GetAtt TokenDeInstalacion.Token
 
   VersionInicial:
     Type: AWS::Lambda::Version
@@ -454,7 +493,7 @@ Resources:
   Programador:
     Type: AWS::Scheduler::Schedule
     Properties:
-      Description: Tareas periódicas de CEH Manager
+      Description: "Tareas peri\u00F3dicas de CEH Manager"
       ScheduleExpression: rate(5 minutes)
       FlexibleTimeWindow: { Mode: "OFF" }
       Target:
@@ -466,7 +505,7 @@ Resources:
   Limpieza:
     Type: AWS::Scheduler::Schedule
     Properties:
-      Description: Depuración semanal de registros vencidos (solo actúa si está activada en Integraciones)
+      Description: "Depuraci\u00F3n semanal de registros vencidos (solo act\u00FAa si est\u00E1 activada en Integraciones)"
       ScheduleExpression: cron(0 4 ? * SUN *)
       ScheduleExpressionTimezone: America/Argentina/Buenos_Aires
       FlexibleTimeWindow: { Mode: "OFF" }
@@ -500,14 +539,17 @@ Resources:
 
 Outputs:
   DireccionDelSistema:
-    Description: Dirección del sistema. Abrila para hacer la instalación inicial.
+    Description: "Direcci\u00F3n del sistema. Abrila para hacer la instalaci\u00F3n inicial."
     Value: !GetAtt DireccionHTTPS.FunctionUrl
   Bucket:
-    Description: Bucket con los datos (cifrados), las copias y el código.
+    Description: "Bucket con los datos (cifrados), las copias y el c\u00F3digo."
     Value: !Ref Bucket
   TablaChat:
     Description: Tabla de DynamoDB con los mensajes del chat (no se borra con la pila).
     Value: !Ref TablaChat
   Funcion:
-    Description: Función que ejecuta el sistema.
+    Description: "Funci\u00F3n que ejecuta el sistema."
     Value: !Ref Funcion
+  TokenInstalacion:
+    Description: "C\u00F3digo de instalaci\u00F3n. Va en la direcci\u00F3n del sistema: /instalar?token=<c\u00F3digo>. Sirve solo para la instalaci\u00F3n inicial."
+    Value: !GetAtt TokenDeInstalacion.Token
